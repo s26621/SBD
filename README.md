@@ -105,16 +105,19 @@ W bloku Transact-SQL sprawdź, którego artykułu jest najwięcej w magazynie i 
 3. Create a trigger that, when inserting or modifying data in the Emp table, will check whether the new earnings (inserted or modified) are greater than 1000. Otherwise, the trigger should report an error and prevent the record from being inserted. Note: The same effect can be achieved more easily using CHECK type integrity constraints. Let's use the trigger for training purposes.
 4. Create the budget table:
 > CREATE TABLE budget (INT NOT NULL value)
+
 This table will store the total value of all employees' salaries. The table will always contain one row. First, calculate the initial value of earnings:
 > INSERT INTO budzet (value)
 > SELECT SUM(sal) FROM emp
+
 Create a trigger that will make sure that the value in the budzet table is always up to date, so that for all operations updating the emp table (INSERT, UPDATE, DELETE), the trigger will update the entry in the budget table
+
 5. Write a trigger that will not allow you to modify department names in the dept table. However, it should be possible to insert new departments.
-6. Write one trigger that:
+7. Write one trigger that:
   • Will not allow to delete an employee whose salary is greater than 0.
   • Will not allow to change the employee's name.
   • Will not allow to insert an employee who already exists (checking by name).
-7. Write a trigger that:
+8. Write a trigger that:
   • Will not allow to decrease salaries.
   • Will not allow to delete employees.
 
@@ -124,10 +127,13 @@ Create a trigger that will make sure that the value in the budzet table is alway
 3.	Utwórz wyzwalacz, który przy wstawianiu lub modyfikowaniu danych w tabeli Emp sprawdzi czy nowe zarobki (wstawiane lub modyfikowane) są większe niż 1000. W przeciwnym przypadku wyzwalacz powinien zgłosić błąd i nie dopuścić do wstawienia rekordu. Uwaga:  Ten sam efekt można uzyskać łatwiej przy pomocy więzów spójności typu CHECK. Użyjmy wyzwalacza w celach treningowych.
 4.	Utwórz tabelę budzet:
 > CREATE TABLE budzet (wartosc INT NOT NULL)
+
 W tabeli tej będzie przechowywana łączna wartość wynagrodzenia wszystkich pracowników. Tabela będzie zawsze zawierała jeden wiersz. Należy najpierw obliczyć początkową wartość zarobków:
 > INSERT INTO budzet (wartosc)
 > SELECT SUM(sal) FROM emp
+
 Utwórz wyzwalacz, który będzie pilnował, aby wartość w tabeli budzet była zawsze aktualna, a więc przy wszystkich operacjach aktualizujących tabelę emp (INSERT, UPDATE, DELETE), wyzwalacz będzie aktualizował wpis w tabeli budżet
+
 5.	Napisz wyzwalacz, który nie pozwoli modyfikować nazw działów w tabeli dept. Powinno być jednak możliwe wstawianie nowych działów.
 6.	Napisz jeden wyzwalacz, który:
   •	Nie pozwoli usunąć pracownika, którego pensja jest większa od 0.
@@ -140,32 +146,37 @@ Utwórz wyzwalacz, który będzie pilnował, aby wartość w tabeli budzet była
 ## Zajęcia 7 - lesson 7 (literal transaltion, original below)
 #### Indexes
 1. To prepare a table with a large amount of data, run the script:
->CREATE TABLE test (Id INT IDENTITY, Content INT, Content2 INT)
->GO
->
->DECLARE @a INT
->SET @a = 1
->WHILE @a < 100000 BEGIN
-> INSERT INTO test (Content, Content2)
->VALUES (CONVERT(INT,RAND() * 100000), CONVERT(INT,RAND() * 100000))
-> SET @a = @a + 1
->END
->GO
+> CREATE TABLE test (Id INT IDENTITY, Content INT, Content2 INT)
+> GO
+> 
+> DECLARE @a INT
+> SET @a = 1
+> WHILE @a < 100000 BEGIN
+>  INSERT INTO test (Content, Content2)
+>  VALUES (CONVERT(INT,RAND() * 100000), CONVERT(INT,RAND() * 100000))
+>  SET @a = @a + 1
+> END
+> GO
 2. Turn on the query execution plan preview and run a query like:
->SELECT * FROM test WHERE Content = 12345
+> SELECT * FROM test WHERE Content = 12345
+
 Look at the plan. You will probably see the Table scan operation. Record the total cost by observing the Estimated subtree cost of the last (leftmost) operation in the plan.
 
 3. Create an ungrouped index on the Content column. Run the query again. Compare the query execution plan and cost. The server should use the index created (Index seek), and the cost should be much lower.
 
 4. "Index only" strategy. Remove the index created in point 4. Execute the query and view its execution plan:
->SELECT Content, Content2 FROM test WHERE Content = 12345
+> SELECT Content, Content2 FROM test WHERE Content = 12345
+
 Create a composite index on the Content and Content2 columns (necessarily in that order). Observe the difference in the query execution plan and the total cost (Estimated subtree cost of the last operation). You will probably notice that the plan consists of only two operations. The first is Index seek, the second is Select. This means that the server did not have to read the data pages.
 
 5. Range search. Remove all indexes from the test table and execute the query with the plan preview:
->SELECT * FROM test WHERE Content BETWEEN 10000 and 20000
+> SELECT * FROM test WHERE Content BETWEEN 10000 and 20000
+
 You will probably notice the Table scan operation. Record the total cost of the query (Estimated subtree cost of the leftmost operation). Create an ungrouped index on the Content column. Execute the query again. The server probably will not use the index (ungrouped indexes do not support range searches well). Remove the ungrouped index and create a grouped index. Execute the query again. View the plan and preview the costs.
+
 6. Sorting using indexes. Remove all indexes from the test table and execute the query with the plan preview:
->SELECT * FROM test ORDER BY Content
+> SELECT * FROM test ORDER BY Content
+
 You will probably notice two expensive operations: Table scan and sorting. Create an ungrouped index on the Content column and execute the query again. Compare the plan and costs. Did the server use the index? Remove the ungrouped index and create a grouped one. Did the server use the index this time?
 
 #### Transactions
@@ -183,62 +194,79 @@ You will probably notice two expensive operations: Table scan and sorting. Creat
 > SELECT * FROM Person -- we should see one person
 8. Try to perform task 7 again, but with the option disabled:
 > SET IMPLICIT_TRANSACTIONS OFF
+
 Before performing the next task, set this option back to ON.
 During the execution of COMMIT and ROLLBACK statements, errors will appear stating that the transaction cannot be committed or rolled back. This is normal, because when the IMPLICIT_TRANSACTIONS option is disabled, each transaction is automatically committed. Perform subsequent tasks with this option enabled.
+
 9. Open the second tab in Management Studio. Execute:
 > SET IMPLICIT_TRANSACTIONS ON
 > SELECT * FROM Person
+
 In window 1, update the record:
 > SET IMPLICIT_TRANSACTIONS ON
 > UPDATE Person SET LastName = 'Igrekowski' WHERE Id = 3
+
 In window 2, try again:
 > SELECT * FROM Person
+
 The query will wait for the lock to be released. In window 1, do:
 > COMMIT
+
 Check if the query from window 2 has been executed.
 NOTE: In this and subsequent exercises performed with IMPLICIT_TRANSACTIONS set to ON, previous, unfinished transactions may interfere. Therefore, it is worth performing a COMMIT in each window before each exercise.
 
 10. In the second MS window, set the isolation level to the lowest:
 > SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
 > Perform task 9 (or similar) again. In the first window, make changes, and in the second, see if you are able to read uncommitted data.
+
 NOTE: Setting the isolation level only works for the next transaction and does not apply to a transaction that has already started. Therefore, after the SET TRANSACTION ISOLATION LEVEL … statement, it is worth performing a COMMIT or ROLLBACK to be sure.
 
 11. Check if the Test table exists and if it contains any records. If not, create it using the script from point 1. Don't forget to COMMIT when you're done. Then set the isolation level to SERIALIZABLE in both tabs. To be on the safe side, we also turn off automatic commit and do COMMIT (it may return an error if there was no previous transaction).
 > SET TRANSACTION ISOLATION LEVEL SERIALIZABLE
 > SET IMPLICIT_TRANSACTIONS ON
 > COMMIT
+
 Then execute in both windows:
 > SELECT * FROM Test
+
 And then in the first window any INSERT:
 > INSERT INTO Test (Content, Content2) VALUES (12345, 56789)
+
 Notice that this time, the execution of the SELECT statement has already caused a lock to be placed on the entire "Person" table and we are not able to execute the INSERT until we execute a COMMIT in window 2. In the case of READ COMMITTED, the INSERT statement would execute immediately (phantom).
 
 ### Original
 #### Indeksy
 1.	Aby przygotować tabelę z dużą ilością danych, uruchom skrypt:
->CREATE TABLE test (Id INT IDENTITY, Zawartosc INT, Zawartosc2 INT)
->GO
->
->DECLARE @a INT
->SET @a = 1
->WHILE @a < 100000 BEGIN
->	INSERT INTO test (Zawartosc, Zawartosc2) 
->VALUES (CONVERT(INT,RAND() * 100000), CONVERT(INT,RAND() * 100000))
->	SET @a = @a + 1
->END
->GO
+> CREATE TABLE test (Id INT IDENTITY, Zawartosc INT, Zawartosc2 INT)
+> GO
+> 
+> DECLARE @a INT
+> SET @a = 1
+> WHILE @a < 100000 BEGIN
+> 	INSERT INTO test (Zawartosc, Zawartosc2) 
+> VALUES (CONVERT(INT,RAND() * 100000), CONVERT(INT,RAND() * 100000))
+>	 SET @a = @a + 1
+> END
+> GO
 2.	Włącz podgląd planu wykonania zapytania i uruchom zapytanie typu:
->SELECT * FROM test WHERE Zawartosc = 12345
+> SELECT * FROM test WHERE Zawartosc = 12345
+
 Obejrzyj plan. Zaobserwujesz zapewne operację Table scan. Zapisz łączny koszt obserwując wartość Estimated subtree cost ostatniej (najbardziej lewej) operacji w planie.
+
 3.	Załóż indeks niepogrupowany na kolumnę Zawartosc. Uruchom zapytanie jeszcze raz. Porównaj plan wykonania zapytania oraz koszt. Serwer powinien użyć założonego indeksu (Index seek), a koszt powinien być znacznie niższy.
 4.	Strategia „tylko indeks”. Usuń indeks założony w punkcie 4. Wykonaj zapytanie i obejrzyj plan jego wykonania:
->SELECT Zawartosc, Zawartosc2 FROM test WHERE Zawartosc = 12345
+
+> SELECT Zawartosc, Zawartosc2 FROM test WHERE Zawartosc = 12345
 Załóż indeks złożony na kolumny Zawartosc oraz Zawartosc2 (koniecznie w takiej kolejności). Zaobserwuj różnicę w planie wykonania zapytania oraz łącznym koszcie (Estimated subtree cost ostatniej operacji). Zauważysz zapewne, że plan składa się jedynie z dwóch operacji. Pierwsza to Index seek, druga to Select. Wynika z tego, że serwer nie musiał odczytać stron z danymi.
+
 5.	Wyszukiwanie zakresowe. Usuń wszystkie indeksy z tabeli test i wykonaj z podglądem planu zapytanie:
->SELECT * FROM test WHERE Zawartosc BETWEEN 10000 and 20000
+> SELECT * FROM test WHERE Zawartosc BETWEEN 10000 and 20000
+
 Zaobserwujesz zapewne operację Table scan. Zapisz łączny koszt zapytania (Estimated subtree cost najbardziej lewej operacji). Załóż indeks niepogrupowany na kolumnie Zawartosc. Wykonaj zapytanie jeszcze raz. Zapewne serwer nie skorzysta z indeksu (indeksy niepogrupowane słabo wspierają wyszukiwanie zakresowe). Usuń indeks niepogrupowany i załóż pogrupowany. Wykonaj zapytanie jeszcze raz. Obejrzyj plan i podejrzyj koszty.
+
 6.	Sortowanie przy pomocy indeksów. Usuń wszystkie indeksy z tabeli test i wykonaj z podglądem planu zapytanie:
->SELECT * FROM test ORDER BY Zawartosc
+> SELECT * FROM test ORDER BY Zawartosc
+
 Zauważysz zapewne dwie kosztowne operacje: Table scan i sortowanie. Załóż indeks niepogrupowany na kolumnę Zawartosc i wykonaj zapytanie jeszcze raz. Porównaj plan i koszty. Czy serwer skorzystał z indeksu? Usuń indeks niepogrupowany i załóż pogrupowany. Czy tym razem serwer skorzystał z indeksu?
 
 #### Transakcje
@@ -256,32 +284,44 @@ Zauważysz zapewne dwie kosztowne operacje: Table scan i sortowanie. Załóż in
 > SELECT * FROM Osoba   -- powinniśmy zobaczyć jedną osobę
 8.	Spróbuj wykonać zadanie 7 ponownie, ale z wyłączoną opcją:
 > SET IMPLICIT_TRANSACTIONS OFF
+
 Przed wykonaniem kolejnego zadania ustaw tą opcję z powrotem na ON.
 W trakcie wykonywania instrukcji COMMIT i ROLLBACK pojawią się błędy mówiące o tym, że nie można zatwierdzić lub wycofać transakcji. Jest to normalne, ponieważ przy wyłączonej opcji IMPLICIT_TRANSACTIONS, każda transakcja jest zatwierdzana automatycznie. Kolejne zadania wykonuj z włączoną tą opcją.
+
 9.	Otwórz drugą zakładkę w Management Studio. Wykonaj:
 > SET IMPLICIT_TRANSACTIONS ON
 > SELECT * FROM Osoba
+
 W oknie 1 zaktualizuj rekord:
 > SET IMPLICIT_TRANSACTIONS ON
 > UPDATE Osoba SET Nazwisko = 'Igrekowski' WHERE Id = 3
+
 W oknie 2 spróbuj wykonać jeszcze raz:
 > SELECT * FROM Osoba
+
 Zapytanie będzie czekać na zwolnienie blokady. W oknie 1 wykonaj:
 > COMMIT
+
 Zobacz, czy wykonało się zapytanie z okna 2.
 UWAGA: Przy tym i kolejnych ćwiczeniach wykonywanych przy IMPLICIT_TRANSACTIONS ustawionym na ON mogą przeszkadzać nam poprzednie, niezakończone transakcje. Dlatego warto przed każdym ćwiczeniem wykonać COMMIT w każdym oknie.
+
 10.	W drugim oknie MS ustaw poziom izolacji na najniższy:
 > SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
 > Wykonaj ponownie zadanie 9 (lub podobne). W pierwszym oknie wprowadzaj zmiany, a w drugim zobacz, czy jesteś w stanie odczytać niezatwierdzone dane.
+
 UWAGA: Ustawienie poziomu izolacji działa dopiero dla kolejnej transakcji i nie dotyczy transakcji, która już się rozpoczęła. Dlatego po instrukcji SET TRANSACTION ISOLATION LEVEL … warto dla pewności wykonać COMMIT lub ROLLBACK.
+
 11.	Sprawdź czy istnieje tabela Test i czy zawiera jakieś rekordy. Jeżeli nie, utwórz ją przy pomocy skryptu z punktu 1. Nie zapomnij wykonać COMMIT po zakończeniu. Następnie ustaw poziom izolacji SERIALIZABLE w obu zakładkach. Dla pewności wyłączamy też automatyczne zatwierdzanie oraz robimy COMMIT (może zwrócić błąd, jeśli nie było poprzedniej transakcji).
 > SET TRANSACTION ISOLATION LEVEL SERIALIZABLE
 > SET IMPLICIT_TRANSACTIONS ON
 > COMMIT
+
 Następnie wykonaj w obu oknach:
 > SELECT * FROM Test
+
 A następnie w pierwszym oknie dowolny INSERT:
 > INSERT INTO Test (Zawartosc, Zawartosc2) VALUES (12345, 56789)
+
 Zauważ, że tym razem, już wykonanie instrukcji SELECT spowodowało założenie blokady na całą tabelę „Osoba” i nie jesteśmy w stanie wykonać INSERT do momentu, gdy w oknie 2 wykonamy COMMIT. W przypadku READ COMMITTED instrukcja INSERT wykonałaby się od razu (fantom).
 
 ## Zajęcia 9 - lesson 9 (literal transaltion, original below)
@@ -324,10 +364,13 @@ W bloku PL/SQL sprawdź, którego artykułu jest najwięcej w magazynie i zmniej
 2. Create a trigger that, when inserting or modifying data in the Emp table, checks whether the new earnings (inserted or modified) are greater than 1000. Otherwise, the trigger should report an error and prevent the record from being inserted. Note: The same effect can be achieved more easily using CHECK type integrity constraints. Let's use the trigger for training purposes.
 3. Create the budget table:
 > CREATE TABLE budget (INT NOT NULL value)
+
 This table will store the total value of all employees' salaries. The table will always contain one row. First, calculate the initial value of earnings:
 > INSERT INTO budzet (value)
 > SELECT SUM(sal) FROM emp
+
 Create a trigger that will ensure that the value in the budzet table is always up to date, so that for all operations updating the emp table (INSERT, UPDATE, DELETE), the trigger will update the entry in the budget table
+
 4. Write one trigger that:
 • Will not allow deleting an employee whose salary is greater than 0.
 • Will not allow changing the employee's name.
@@ -341,10 +384,13 @@ Create a trigger that will ensure that the value in the budzet table is always u
 2.	Utwórz wyzwalacz, który przy wstawianiu lub modyfikowaniu danych w tabeli Emp sprawdzi czy nowe zarobki (wstawiane lub modyfikowane) są większe niż 1000. W przeciwnym przypadku wyzwalacz powinien zgłosić błąd i nie dopuścić do wstawienia rekordu. Uwaga:  Ten sam efekt można uzyskać łatwiej przy pomocy więzów spójności typu CHECK. Użyjmy wyzwalacza w celach treningowych.
 3.	Utwórz tabelę budzet:
 > CREATE TABLE budzet (wartosc INT NOT NULL)
+
 W tabeli tej będzie przechowywana łączna wartość wynagrodzenia wszystkich pracowników. Tabela będzie zawsze zawierała jeden wiersz. Należy najpierw obliczyć początkową wartość zarobków:
 > INSERT INTO budzet (wartosc)
 > SELECT SUM(sal) FROM emp
+
 Utwórz wyzwalacz, który będzie pilnował, aby wartość w tabeli budzet była zawsze aktualna, a więc przy wszystkich operacjach aktualizujących tabelę emp (INSERT, UPDATE, DELETE), wyzwalacz będzie aktualizował wpis w tabeli budżet
+
 4.	Napisz jeden wyzwalacz, który:
 •	Nie pozwoli usunąć pracownika, którego pensja jest większa od 0.
 •	Nie pozwoli zmienić nazwiska pracownika.
